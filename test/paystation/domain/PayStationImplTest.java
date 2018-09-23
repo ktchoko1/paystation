@@ -11,6 +11,7 @@
  */
 package paystation.domain;
 
+import java.util.HashMap;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -137,5 +138,99 @@ public class PayStationImplTest {
         ps.addPayment(25);
         assertEquals("Insert after cancel should work",
                 10, ps.readDisplay());
+    }
+    
+      /**
+     * Verify that empty returns correct amount inserts
+     */
+    @Test
+    public void shouldReturnDepositOnlyAfterBuy()throws IllegalCoinException{
+        ps.addPayment(5);
+        ps.addPayment(25);
+        //optional
+        ps.cancel();
+
+        //start new payment
+        ps.addPayment(10);
+
+        ps.buy();
+
+        ps.addPayment(25);
+        ps.addPayment(5);
+        ps.buy();
+        assertEquals("Nothing returned",40, ps.empty());
+    }
+     @Test
+    public void shouldAddToAmountReturnByEmpty()throws IllegalCoinException{
+        ps.addPayment(10);
+        ps.buy();
+        ps.empty();
+      
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        assertFalse(testMap.containsKey(25));
+
+    }
+
+    @Test
+    public void shouldReturnTotalToZeroAfterEmpty()throws IllegalCoinException{
+        ps.addPayment(25);
+        ps.buy();
+        ps.empty();
+        assertEquals(0,ps.readDisplay());
+
+    }
+
+    @Test
+    public void shouldReturnOneCoinEntered() throws IllegalCoinException{
+        //entering one coin to machine
+        ps.addPayment(25);
+
+        //creating a reference to the map in paystation object to access values
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        //will test that map contains key for 25  
+        assertTrue(testMap.containsKey(25) && testMap.containsKey(25));
+
+    }
+
+    @Test
+    public void shouldReturnMultipleCoins() throws IllegalCoinException{
+        ps.addPayment(5);
+        ps.addPayment(10);
+        ps.addPayment(25);
+
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        assertTrue(testMap.containsKey(5) && testMap.containsKey(10) && testMap.containsKey(25));
+    }
+
+    @Test
+    public void shouldReturnNickelAndDimeNotQuarter() throws IllegalCoinException{
+        ps.addPayment(5);
+        ps.addPayment(10);
+
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        //test passes for 25 and would fail if I put 5 or 10 since those keys are present
+        assertFalse(testMap.containsKey(25));
+    }
+
+    @Test
+    public void shouldEmptyMapAfterCancel() throws IllegalCoinException{
+        ps.addPayment(5);
+        ps.addPayment(10);
+        //calling cancel before the reference map is mad should leave that map as empty
+        //as cancel clears the existing map in the paystation object
+        ps.cancel();
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        //the isEmpty method returns true if map is empty test will pass in the map is empty after cancel
+        assertTrue(testMap.isEmpty());
+    }
+
+    @Test
+    public void shouldEmptyMapAfterBuy() throws IllegalCoinException{
+        ps.addPayment(25);
+        ps.addPayment(10);
+        ps.buy();
+        HashMap<Integer,Integer> testMap = new HashMap<>(ps.cancel());
+        //same as above should be empty as the buy calls reset which should clear the map
+        assertTrue(testMap.isEmpty());
     }
 }
